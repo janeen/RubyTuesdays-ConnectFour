@@ -165,7 +165,7 @@ describe Game do
 
   describe '#check_for_winner' do
     it 'should correctly detect a winner' do
-      file = File.open "#{Rails.root}/spec/support/games/game_state.json"
+      file = File.open "#{Rails.root}/spec/support/games/game_state_1.json"
       test_data = file.read
       games = JSON.parse test_data
 

@@ -1,0 +1,13 @@
+rake db:test:prepare
+
+rspec spec/models/game_spec.rb:166
+
+rails c   (rails console command)
+
+ls game (shows all the methods)
+
+game = Game.new  (create new game in memory)
+game.board  (print the value of board - which is 2D array)
+game.pretty_print  (pretty version of board - visual rep of arrays)
+game.save!  (saves game to DB thereby assigning it a created_at date)
+

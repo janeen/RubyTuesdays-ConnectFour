@@ -46,7 +46,6 @@ class Game < ActiveRecord::Base
   # Gets the next player
   # @return [String] The next player
   def next_player
-    # TODO
     nextplayer = " "
 	if self.current_player == "blue"
 	  nextplayer = "red"
@@ -99,8 +98,32 @@ class Game < ActiveRecord::Base
   # @param column [Integer]
   # @param player [String] either 'red' or 'blue'
   def make_move(column, player)
-    # TODO
 
+	# make sure column is valid
+	unless column >= 0 && column < NUM_COLUMNS - 1
+      raise ArgumentError, "Column [#{column}]is out of bounds."
+	end
+	
+	# make sure column is not full
+	unless board[column].length < NUM_ROWS
+      raise ArgumentError, "Column [#{column}] is full - cannot add another piece."
+	end
+	
+	# make sure player is red or blue
+	unless player == 'red' or player == 'blue' or player == :red or player == :blue
+      raise ArgumentError, "Player, #{player}, is not valid.  Allowed values are 'red' or 'blue'."
+	end
+	
+	# got this far - update the board
+	row = board[column].length # this should be the next available index in the row array
+	self.board[column][row]=player
+
+	# check for a winner
+	self.status = check_for_winner
+	if self.status == 'in_progress' or self.status == :in_progress
+	  set_next_player  # if no winner, set the next player
+	end
+	
   end
 
   # Checks if there is a winner and returns the player if it exists
@@ -108,7 +131,65 @@ class Game < ActiveRecord::Base
   # @return [String] 'red', 'blue', 'tie', 'draw', or 'in_progress'
   def check_for_winner
     # TODO
-
+	
+	
+	# check to see if latest move has resulted in a win for a player 
+    # don't have the coordinates of the latest move, so we need to check the whole board
+	binding.pry
+	# check each horizontal row
+	for i in 0...NUM_ROWS
+	  for j in 0..(NUM_COLUMNS-4)  # this is inclusive!
+	    binding.pry
+	    puts "coords #{j}, #{i}: #{board_position([j,i])}"
+	    if( board_position([j,i]) != nil &&
+		    board_position([j,i]) == board_position(Game.horizontal([j,i],1)) &&
+		    board_position([j,i]) == board_position(Game.horizontal([j,i],2)) &&
+		    board_position([j,i]) == board_position(Game.horizontal([j,i],3)) )
+		  return board_position([j,i]) # they won
+		end
+	  end
+	end
+	
+	# check each vertical row
+	for j in 0...NUM_COLUMNS
+	  row = board[j]
+	  if row.length >= 4  # starting looking for 4 in a row vertically
+		for i in 0..(row.length-4)
+			if( board_position([j,i]) != nil &&
+				board_position([j,i]) == board_position(Game.vertical([j,i],1)) &&
+				board_position([j,i]) == board_position(Game.vertical([j,i],2)) &&
+				board_position([j,i]) == board_position(Game.vertical([j,i],3)) )
+			  return board_position([j,i]) # they won
+			end		  
+		end
+	  end
+	end
+	
+    # check diagonals - this only checks diagonal up (not down)
+	for i in 0..(NUM_ROWS-4)
+  	  for j in 0..(NUM_COLUMNS-4)
+		if( board_position([j,i]) != nil &&
+			board_position([j,i]) == board_position(Game.diagonal([j,i],1)) &&
+			board_position([j,i]) == board_position(Game.diagonal([j,i],2)) &&
+			board_position([j,i]) == board_position(Game.diagonal([j,i],3)) )
+		  return board_position([j,i]) # they won
+		end
+	  end
+	end
+	
+	# check to see if the board is now full and no one won - then it is a tie
+    running_sum = 0
+	for j in 0...NUM_COLUMNS
+	  running_sum += board[j].length
+	end
+	if running_sum == (NUM_COLUMNS) * (NUM_ROWS)
+	  # we have a full board
+	  return :tie
+	end
+	
+	# if no one has won and board not full, then game is still in_progress
+    return :in_progress
+	
   end
 
 
